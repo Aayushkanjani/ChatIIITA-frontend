@@ -1,11 +1,24 @@
 import { create } from "zustand";
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, setDoc, doc , getDoc , getDocs ,updateDoc , arrayUnion } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth";
+import {
+  getFirestore,
+  collection,
+  setDoc,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  arrayUnion
+} from "firebase/firestore";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged
+} from "firebase/auth";
 import { signOut as firebaseSignOut } from "firebase/auth";
-import { Navigate } from "react-router-dom";
 
-
+// Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -21,7 +34,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Zustand store for authentication
 export const useAuthStore1 = create((set) => ({
   user: null,
   isAuthenticated: false,
@@ -30,22 +42,21 @@ export const useAuthStore1 = create((set) => ({
   error: null,
   campaigns: [],
 
- signIn : async () => {
+  // Sign in using Google Popup
+  signIn: async () => {
     set({ isLoading: true, error: null });
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const userRef = doc(db, "user", user.uid);
-  
-      // Check if the user exists in Firestore
       const userDoc = await getDoc(userRef);
-  
+
+      // Define userData consistently
+      let userData;
       if (userDoc.exists()) {
-        // User exists, no need to create a new profile
-        console.log("User already exists:", userDoc.data());
+        userData = userDoc.data();
       } else {
-        // User doesn't exist, create a new profile
-        const userData = {
+        userData = {
           uid: user.uid,
           name: user.displayName || "",
           email: user.email,
@@ -53,17 +64,19 @@ export const useAuthStore1 = create((set) => ({
           image: user.photoURL || "",
           messages: [],
         };
-  
         await setDoc(userRef, userData);
-        // console.log("New user created:", userData);
       }
-  
-      // Save token in localStorage
+
+      // Save token (if needed for later use)
       const token = await user.getIdToken();
+
       localStorage.setItem("authToken", token);
+
       // Update Zustand state
+      window.location.reload()
       set({ user: userData, isAuthenticated: true, isLoading: false });
-      window.location.reload();
+      window.location.reload()
+      // Optionally, navigate to a protected route (using React Router's useNavigate hook in your component)
     } catch (error) {
       console.error("Error signing in:", error);
       set({
@@ -73,31 +86,31 @@ export const useAuthStore1 = create((set) => ({
       throw error;
     }
   },
-  
 
+  // Sign out the user
   signOut: async () => {
     set({ isLoading: true, error: null });
     try {
       await firebaseSignOut(auth);
       localStorage.removeItem("authToken");
-      
-      // Reset state
       set({ user: null, isAuthenticated: false, isLoading: false });
+      window.location.reload()
+      // Optionally, navigate to the home or login page
     } catch (error) {
-      set({ error: "Error logging out", isLoading: false });
       console.error("Error signing out:", error);
+      set({ error: "Error logging out", isLoading: false });
     }
   },
 
-  
+  // Check the current auth state and update the store accordingly
   checkAuth: async () => {
     set({ isCheckingAuth: true, error: null });
     try {
-      onAuthStateChanged(auth, async (currentUser) => {
+      // The unsubscribe function can be used in a React component's cleanup
+      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
         if (currentUser) {
-          const userDoc = doc(db, "user", currentUser.uid);
-          const userSnap = await getDoc(userDoc);
-  
+          const userRef = doc(db, "user", currentUser.uid);
+          const userSnap = await getDoc(userRef);
           if (userSnap.exists()) {
             set({
               user: { uid: currentUser.uid, ...userSnap.data() },
@@ -105,83 +118,72 @@ export const useAuthStore1 = create((set) => ({
               isCheckingAuth: false,
             });
           } else {
-            console.error("No Firestore document found for user");
             set({ user: null, isAuthenticated: false, isCheckingAuth: false });
           }
         } else {
-          // No user is signed in
           set({ user: null, isAuthenticated: false, isCheckingAuth: false });
         }
       });
+      return unsubscribe; // Return unsubscribe function for cleanup if needed
     } catch (error) {
-      console.error("Error checking auth state:", error);
+      // console.error("Error checking auth:", error);
       set({ user: null, isAuthenticated: false, isCheckingAuth: false });
     }
   },
 
+  // Update the user schema in Firestore
   updateUserSchema: async (userData) => {
     set({ isLoading: true, error: null });
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("User not authenticated");
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error("User not authenticated");
 
-      // Update user profile in Firestore
-      await setDoc(doc(db, "users", user.uid), userData, { merge: true });
-
-      // Update Zustand state
-      set({ user: { ...userData, email: user.email }, isLoading: false });
+      // Use the consistent "user" collection name
+      await setDoc(doc(db, "user", currentUser.uid), userData, { merge: true });
+      set({ user: { ...userData, email: currentUser.email }, isLoading: false });
     } catch (error) {
+      // console.error("Error updating user schema:", error);
       set({ error: error.message || "Error updating user schema", isLoading: false });
-      console.error("Error updating user schema:", error);
     }
   },
 
-  fetchCampaigns : async () => {
+  // Fetch campaigns from Firestore
+  fetchCampaigns: async () => {
     set({ isLoading: true, error: null });
-  
     try {
       const querySnapshot = await getDocs(collection(db, "campaign"));
       const fetchedCampaigns = querySnapshot.docs.map((doc) => ({
         id: doc.id, // Firestore document ID
-        ...doc.data(), // Campaign data
+        ...doc.data(),
       }));
-  
-      set({ campaigns : fetchedCampaigns, isLoading: false });
+      set({ campaigns: fetchedCampaigns, isLoading: false });
     } catch (error) {
+      // console.error("Error fetching campaigns:", error);
       set({ error: error.message || "Error fetching campaigns", isLoading: false });
-      console.error("Error fetching campaigns:", error);
     }
   },
 
+  // Add a new prompt to the user's messages array in Firestore
   addPrompt: async (newPrompt) => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
-        throw new Error("User not authenticated");
+      throw new Error("User not authenticated");
     }
-    
-    const email = currentUser.email;
-    const messagesRef = collection(db, "user");
-    const userDocRef = doc(messagesRef, currentUser.uid);
-    
+    const userRef = doc(db, "user", currentUser.uid);
     try {
-        // Check if the document exists
-        const docSnap = await getDoc(userDocRef);
-        
-        if (!docSnap.exists()) {
-            // Create a new document if it does not exist
-            await setDoc(userDocRef, { email, messages: [newPrompt] });
-        } else {
-            // Update the existing document
-            await updateDoc(userDocRef, {
-                messages: arrayUnion(newPrompt)  // Corrected field name
-            });
-        }
-        // console.log("Prompt added successfully");
+      const docSnap = await getDoc(userRef);
+      if (!docSnap.exists()) {
+        await setDoc(userRef, { email: currentUser.email, messages: [newPrompt] });
+      } else {
+        await updateDoc(userRef, {
+          messages: arrayUnion(newPrompt)
+        });
+      }
     } catch (error) {
-        console.error("Error adding prompt:", error);
+      // console.error("Error adding prompt:", error);
+      set({ error: error.message || "Error adding prompt" });
     }
-}
-
+  }
 }));
 
 export { db, auth };
