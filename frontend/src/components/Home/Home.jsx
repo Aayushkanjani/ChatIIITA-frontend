@@ -78,7 +78,7 @@ const Home = () => {
             <div className="relative max-w-screen-xl mt-10 flex flex-col md:flex-row space-x-20 gap-10 items-center mx-auto px-6 py-12 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-2xl">
                 {/* Left Image */}
                 <div className="flex-shrink-0 w-full md:w-1/2">
-                    <img className="w-full rounded-xl shadow-xl" src="C9D9D3F6-0C30-4487-A2E9-C4F3EC0B067D.jpeg" alt="Chatbot" />
+                    <img className="w-full rounded-xl shadow-xl" src="photo.jpeg" alt="Chatbot" />
                 </div>
 
                 {/* Right Content - Explanation */}
