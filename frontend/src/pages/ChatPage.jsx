@@ -198,7 +198,7 @@ const ChatPage = () => {
     
             try {
                 // Send the question to the FastAPI backend
-                const response = await axios.post("http://localhost:8000/chat", {  question : input });
+                const response = await axios.post("https://python-backend-production-97d1.up.railway.app/chat", {  question : input });
                 
                 // Extract the AI's answer from the response
                 const aiResponse = response.data.answer;
