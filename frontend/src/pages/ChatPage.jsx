@@ -13,7 +13,7 @@ const ChatPage = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
-    const { user, signOut , addPrompt} = useAuthStore1();
+    const { user, signOut , addPrompt , addAnswer} = useAuthStore1();
     const [chatHistory, setChatHistory] = useState([]);
     const [iscomp, setIscomp] = useState(true);
     const [suggesting, setSuggesting] = useState(false);
@@ -115,7 +115,7 @@ const ChatPage = () => {
     
             try {
                 // Make the POST request to your backend
-                const response = await axios.post("https://chatiiita-backend-production.up.railway.app/chat", {
+                const response = await axios.post("https://python-backend-production-97d1.up.railway.app/chat", {
                     question: userInput,  // Ensure this matches the backend structure
                 });
     
@@ -198,13 +198,14 @@ const ChatPage = () => {
     
             try {
                 // Send the question to the FastAPI backend
-                const response = await axios.post("https://chatiiita-backend-production.up.railway.app/chat", {  question : input });
+                const response = await axios.post("http://localhost:8000/chat", {  question : input });
                 
                 // Extract the AI's answer from the response
                 const aiResponse = response.data.answer;
     
                 if (aiResponse) {
                     // Add a typing indicator, then the actual AI response
+                    addAnswer(aiResponse)
                     setMessages((prevMessages) => [
                         ...prevMessages,
                         { text: "", sender: "ai", typing: true },
@@ -358,76 +359,72 @@ const ChatPage = () => {
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
-    className="relative left-0  w-72 bg-violet-100   dark:bg-gray-800  dark:bg-opacity-90 text-white overflow-y-auto backdrop-blur-xl flex flex-col justify-between"
+    className="relative left-0  w-72 bg-violet-100   dark:bg-gray-800  dark:bg-opacity-90 text-white overflow-y-auto "
     style={{ height:'100vh' }}
 >
     {/* Sidebar Header */}
-    <div className="flex  text-black dark:text-white items-center justify-left ml-4 gap-2 mt-3">
-    
-    <Link
-    to="/"
-    >
-        <img
-            src="Chat_IIITA_No_Background.png"
-            className="mr-3 h-14 rounded-lg dark:hidden"
-            alt="Logo"
-        />
-        <img
-            src="Chat_IIITA_White_Font_Transparent_BG.png"
-            className="mr-3 h-14 rounded-lg hidden dark:block"
-            alt="Logo"
-        />
-    </Link>
-    
+    <div className="flex text-black dark:text-white items-center justify-left ml-4 gap-2 mt-3">
+        <Link to="/">
+            <img
+                src="Chat_IIITA_No_Background.png"
+                className="mr-3 h-14 rounded-lg dark:hidden"
+                alt="Logo"
+            />
+            <img
+                src="Chat_IIITA_White_Font_Transparent_BG.png"
+                className="mr-3 h-14 rounded-lg hidden dark:block"
+                alt="Logo"
+            />
+        </Link>
     </div>
     <div className="p-8 pl-4">
-        <div className="flex gap-3 items-center">
-
-            <h2 className="text-xl font-light pl-1 dark:text-white text-black ">New Chat</h2>
-                <motion.button
-                    whileHover={{scale:1.05}}
-                    whileTap={{scale:0.95}}
-                    className="p-1 bg-gradient-to-t from-blue-500  to-purple-500 flex items-center rounded-full"
-                    onClick={startNewChat}
-                >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                </motion.button>
+        <div className="flex gap-3 ">
+            <h2 className="text-xl font-light pl-1 dark:text-white text-black">New Chat</h2>
+            <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-1 bg-gradient-to-t from-blue-500 to-purple-500 flex items-center rounded-full"
+                onClick={startNewChat}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus">
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                </svg>
+            </motion.button>
         </div>
-             {/* Chat History List */}
-             <div className="mt-2">
-                <ul className="space-y-2">
-                    {chatHistory.map((chat, index) => (
-                        <li key={chat.timestamp || index}>
-                            <div className="p-1 px-2 flex justify-between w-full bg-violet-200 text-gray-700  dark:text-white rounded-2xl dark:bg-gray-700 dark:hover:bg-gray-600 hover:bg-violet-300"
-                                onClick={() => {handleChatSelection}}
-                            >
-                                <div className="flex flex-col">
-                                 <span className="text-md font-bold">Chat {chatHistory.length - index}</span>
-                                 <span className="text-xs">Saved at: {new Date(chat.timestamp).toLocaleString()}</span>
-                                </div>
-                                
-                                <div className="flex gap-2 justify-end pl-10">
-                                    <motion.button
-                                        whileHover={{ scale: 1.06 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => deleteChat(index)}
-                                    >
-                                        <Trash className="h-5 w-5"/>
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.06 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => handleChatSelection(chat)}
-                                    >
-                                        <Rocket className="h-5 w-5"/>
-                                    </motion.button>
-                                </div>
+        {/* Chat History List */}
+        <div className="mt-2">
+            <ul className="space-y-2">
+                {chatHistory.map((chat, index) => (
+                    <li key={chat.timestamp || index}>
+                        <div className="p-1 px-2 flex justify-between w-full bg-violet-200 text-gray-700 dark:text-white rounded-2xl dark:bg-gray-700 dark:hover:bg-gray-600 hover:bg-violet-300"
+                            onClick={() => { handleChatSelection }}
+                        >
+                            <div className="flex flex-col">
+                                <span className="text-md font-bold">Chat {chatHistory.length - index}</span>
+                                <span className="text-xs">Saved at: {new Date(chat.timestamp).toLocaleString()}</span>
                             </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-                
+                            <div className="flex gap-2 justify-end pl-10">
+                                <motion.button
+                                    whileHover={{ scale: 1.06 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => deleteChat(index)}
+                                >
+                                    <Trash className="h-5 w-5" />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.06 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleChatSelection(chat)}
+                                >
+                                    <Rocket className="h-5 w-5" />
+                                </motion.button>
+                            </div>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        </div>
         <h2 className="text-xl font-light mb-4 mt-4 dark:text-white text-black border-t border-black dark:border-gray-400 pt-3">Important Links</h2>
         <ul className="space-y-1">
             <li>
@@ -436,9 +433,12 @@ const ChatPage = () => {
                     to="https://placement.iiita.ac.in/"
                     className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>Placement cell </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link">
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    </svg>
+                    <span className="font-light">Placement cell</span>
                 </Link>
             </li>
             <li>
@@ -447,9 +447,12 @@ const ChatPage = () => {
                     to="https://erp.iiita.ac.in/"
                     className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>ERP IIITA</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link">
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    </svg>
+                    <span className="font-light">ERP IIITA</span>
                 </Link>
             </li>
             <li>
@@ -458,9 +461,12 @@ const ChatPage = () => {
                     to="https://examcell.iiita.ac.in/"
                     className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>AAA</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link">
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    </svg>
+                    <span className="font-light">AAA</span>
                 </Link>
             </li>
             <li>
@@ -469,74 +475,41 @@ const ChatPage = () => {
                     className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
                     target="_blank"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                    <img src="/image.png" className="h-4  w-4"alt="" />
 
-                <span>GeekHaven</span>
+                    <span className="font-light">GeekHaven</span>
                 </Link>
             </li>
         </ul>
-        <h2 className="text-xl font-light mb-4 mt-4 dark:text-white text-black border-t border-black dark:border-gray-400 pt-3">Teaching Profile and Notes</h2>
+        <h2 className="text-xl font-light mb-4 mt-4 dark:text-white text-black border-t border-black dark:border-gray-400 pt-3">Notes and PYQs</h2>
         <ul className="space-y-1">
             <li>
                 <Link
                     target="blank"
-                    to="https://profile.iiita.ac.in/srdubey/teaching.php"
+                    to="https://play.google.com/store/apps/details?id=com.garnox.geekhaven"
                     className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>PSP</span>
-                </Link>
-            </li>
-            <li>
-                <Link
-                    target="blank"
-                    to="https://profile.iiita.ac.in/seemak/Teaching.php"
-                    className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
-                >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>LAL</span>
-                </Link>
-            </li>
-            <li>
-                <Link
-                    target="blank"
-                    to="https://profile.iiita.ac.in/srijit/teaching.html"
-                    className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
-                >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>EP</span>
-                </Link>
-            </li>
-        </ul>
-        <h2 className="text-xl fo
-        nt-light mb-4 mt-4 dark:text-white text-black border-t border-black dark:border-gray-400 pt-3">Notes and PYQs</h2>
-        <ul className="space-y-1 ">
-            <li>
-                <Link
-                    target="blank"
-                    to="https://profile.iiita.ac.in/srdubey/teaching.php"
-                    className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
-                >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>PSP</span>
-                </Link>
-            </li>
-            <li>
-                <Link
-                    target="blank"
-                    to="https://profile.iiita.ac.in/seemak/Teaching.php"
-                    className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
-                >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-
-                <span>LAL</span>
-                </Link>
-            </li>
+                   
+                    <img className="h-6 w-6 bg-cover rounded-lg " src="/transparent_logo.png" alt="" />
             
+
+                    <span className="font-light" >Sembreaker</span>
+                </Link>
+            </li>
+            {/* <li>
+                <Link
+                    target="blank"
+                    to="https://profile.iiita.ac.in/seemak/Teaching.php"
+                    className="flex items-center font-medium text-blue-500 hover:text-blue-600 dark:text-blue-300 p-2 dark:hover:text-blue-400 gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link">
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    </svg>
+                    <span>LAL</span>
+                </Link>
+            </li> */}
         </ul>
         <ul className="mt-4">
             <li>
@@ -544,16 +517,15 @@ const ChatPage = () => {
             </li>
         </ul>
     </div>
-
     {/* Sidebar Footer */}
-    <div className="p-6 border-t flex flex-col  border-gray-700 dark:border-gray-300 gap-3">
-        <Link
+    <div className="p-6 border-t flex flex-col  border-gray-700 dark:border-gray-500 gap-3">
+        {/* <Link
             to="/dashboard"
             className="flex items-center text-black dark:text-white border-violet-100 space-x-2  dark:hover:bg-gray-700 p-2 rounded-lg  border-2 hover:border-black dark:border-2 dark:border-gray-800 hover:duration-300 dark:hover:duration-300"
                 >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span>Profile</span>
-        </Link>
+        </Link> */}
         <motion.button
             onClick={confirmLoggingout}
             className="w-full h-10 bg-red-500 text-white text-sm
@@ -605,18 +577,18 @@ const ChatPage = () => {
                                 </button>
                                 <button 
                                     className="text-left"
-                                    onClick={() => clickbutton("Where is swimming pool?")}
+                                    onClick={() => clickbutton("I have fees updation issues on ERP whom to contact ?")}
                                 >
                                     <div className="text-lg max-w-52 h-52 bg-violet-200 hover:bg-violet-300 dark:bg-gray-700 dark:hover:bg-gray-800 p-3 rounded-2xl duration-300 shadow-lg">
-                                        Where is swimming pool?
+                                    I have fees updation issues on ERP whom to contact?
                                     </div>
                                 </button>
                                 <button 
                                     className="text-left"
-                                    onClick={() => clickbutton("Suggest me some youtube channels for DSA")}
+                                    onClick={() => clickbutton("Suggest me some youtube channels for DSA and CP")}
                                 >
                                     <div className="text-lg max-w-52 h-52 bg-violet-200 hover:bg-violet-300 dark:bg-gray-700 dark:hover:bg-gray-800 p-3 rounded-2xl duration-300 shadow-lg">
-                                     Suggest me some youtube channels for DSA
+                                     Suggest me some resources for DSA and CP
                                     </div>
                                 </button>
                                 
@@ -777,8 +749,6 @@ const ChatPage = () => {
                         
                     </motion.div>
                 )}
-
-
                 </div> 
             </div>
         </>
