@@ -115,7 +115,7 @@ const ChatPage = () => {
     
             try {
                 // Make the POST request to your backend
-                const response = await axios.post("https://python-backend-production-97d1.up.railway.app/chat", {
+                const response = await axios.post("https://chatiiita-backend-production.up.railway.app/chat", {
                     question: userInput,  // Ensure this matches the backend structure
                 });
     
@@ -198,7 +198,7 @@ const ChatPage = () => {
     
             try {
                 // Send the question to the FastAPI backend
-                const response = await axios.post("https://python-backend-production-97d1.up.railway.app/chat", {  question : input });
+                const response = await axios.post("https://chatiiita-backend-production.up.railway.app/chat", {  question : input });
                 
                 // Extract the AI's answer from the response
                 const aiResponse = response.data.answer;
