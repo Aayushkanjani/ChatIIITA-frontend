@@ -27,7 +27,7 @@ const ChatPage = () => {
     const [showTranscription , setShowTranscription] = useState(false);
     const [generating , setGenerating] = useState(false)
     const [activeChatIndex, setActiveChatIndex] = useState(null);
-    const [aiResponse, setAIResponse] = useState(null);
+    const [answer, setAnswer] = useState(null);
 
     // Ref to store mediaRecorder object
 
@@ -204,20 +204,22 @@ const ChatPage = () => {
             try {
                 // Send the question to the FastAPI backend
                 const response = await axios.post("https://chatiiita-backend-production.up.railway.app/chat", {  question : input });
-                console.log(response)
-                const answer = response.data.answer;
+                //console.log(response)
+                const actualData = response.data.answer;
                 // Extract the AI's answer from the response
-                setAIResponse(answer);
-                console.log(answer)
+                setAnswer(actualData);
+                //console.log(answer)
+                const aiResponse = actualData;
     
                 if (aiResponse) {
                     // Add a typing indicator, then the actual AI response
+                    simulateTypewriterEffect(aiResponse);
                     addAnswer(aiResponse)
                     setMessages((prevMessages) => [
                         ...prevMessages,
                         { text: "", sender: "ai", typing: true },
                     ]);
-                    simulateTypewriterEffect(aiResponse);
+                   
                 }
             } catch (error) {
                 // Display an error message if there's a problem with the request
