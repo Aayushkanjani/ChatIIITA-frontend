@@ -118,8 +118,12 @@ const ChatPage = () => {
                 const response = await axios.post("https://chatiiita-backend-production.up.railway.app/chat", {
                     question: userInput,  // Ensure this matches the backend structure
                 });
+                
+                console.log(response);
     
                 const aiResponse = response.data.answer;
+                
+                console.log(aiResponse);
     
                 if (aiResponse) {
                     // Add AI response with typing effect
